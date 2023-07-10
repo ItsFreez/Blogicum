@@ -1,3 +1,4 @@
+from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import get_object_or_404, render
 from django.views.generic import (
@@ -96,6 +97,20 @@ class ProfileDetailView(DetailView):
     slug_field = 'username'
     slug_url_kwarg = 'username'
     template_name = 'blog/profile.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['profile'] = self.request.user
+        return context
+
+
+class ProfileUpdateView(UpdateView):
+    model = User
+    form_class = UserCreationForm
+    template_name = 'blog/user.html'
+
+    def get_success_url(self):
+        return reverse('blog:profile', kwargs={'username': self.request.user})
 
 
 class PostCreateView(LoginRequiredMixin, CreateView):
