@@ -1,7 +1,10 @@
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import get_object_or_404, render
-from django.views.generic import DetailView, ListView
+from django.views.generic import CreateView, DetailView, ListView
 from django.utils import timezone
+from django.urls import reverse
 
+from .forms import PostForm
 from .models import Category, Post, User
 
 
@@ -35,6 +38,7 @@ class PostDetailView(DetailView):
 
 class CategoryDetailView(ListView):
     model = Category
+    slug_field = 'category_slug'
     slug_url_kwarg = 'category_slug'
     queryset = base_post_queryset()
     template_name = 'blog/category.html'
@@ -64,3 +68,16 @@ class ProfileDetailView(DetailView):
     slug_field = 'username'
     slug_url_kwarg = 'username'
     template_name = 'blog/profile.html'
+
+
+class PostCreateView(LoginRequiredMixin, CreateView):
+    model = Post
+    form_class = PostForm
+    template_name = 'blog/create.html'
+
+    def form_valid(self, form):
+        form.instance.author = self.request.user
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse('blog:profile', kwargs={'username': self.request.user})

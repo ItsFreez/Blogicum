@@ -78,6 +78,10 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+LOGIN_URL = 'login'
+
+LOGIN_REDIRECT_URL = 'blog:index'
+
 CSRF_FAILURE_VIEW = 'core.views.csrf_failure'
 
 LANGUAGE_CODE = 'ru-RU'
