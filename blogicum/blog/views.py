@@ -2,7 +2,7 @@ from django.shortcuts import get_object_or_404, render
 from django.views.generic import DetailView, ListView
 from django.utils import timezone
 
-from .models import Category, Post
+from .models import Category, Post, User
 
 
 def base_post_queryset():
@@ -33,6 +33,14 @@ class PostDetailView(DetailView):
     template_name = 'blog/detail.html'
 
 
+class CategoryDetailView(ListView):
+    model = Category
+    slug_url_kwarg = 'category_slug'
+    queryset = base_post_queryset()
+    template_name = 'blog/category.html'
+    paginate_by = 10
+
+
 def category_posts(request, category_slug):
     """Отобразить все опубликованные посты выбранной категории."""
     template = 'blog/category.html'
@@ -49,3 +57,10 @@ def category_posts(request, category_slug):
         'post_list': post_list,
     }
     return render(request, template, context)
+
+
+class ProfileDetailView(DetailView):
+    model = User
+    slug_field = 'username'
+    slug_url_kwarg = 'username'
+    template_name = 'blog/profile.html'
