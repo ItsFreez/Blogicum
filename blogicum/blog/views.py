@@ -1,6 +1,6 @@
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404
 from django.views.generic import (
     CreateView, DeleteView, DetailView, ListView, UpdateView
 )
@@ -66,6 +66,7 @@ class CommentCreateView(LoginRequiredMixin, CreateView):
 
 
 class CategoryListView(ListView):
+    """Отобразить все опубликованные посты выбранной категории."""
     model = Post
     template_name = 'blog/category.html'
     paginate_by = 10
@@ -74,31 +75,14 @@ class CategoryListView(ListView):
         context = super().get_context_data(**kwargs)
         context['category'] = get_object_or_404(
             Category,
-            slug=self.kwargs['category_slug']
+            slug=self.kwargs['category_slug'],
+            is_published=True
         )
         return context
 
     def get_queryset(self):
         return base_post_queryset().filter(
             category__slug=self.kwargs['category_slug'])
-
-
-def category_posts(request, category_slug):
-    """Отобразить все опубликованные посты выбранной категории."""
-    template = 'blog/category.html'
-    category = get_object_or_404(
-        Category,
-        slug=category_slug,
-        is_published=True
-    )
-    post_list = base_post_queryset().filter(
-        category__slug=category_slug
-    )
-    context = {
-        'category': category,
-        'post_list': post_list,
-    }
-    return render(request, template, context)
 
 
 class ProfileDetailView(DetailView):
