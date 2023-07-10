@@ -1,4 +1,5 @@
 from django.shortcuts import get_object_or_404, render
+from django.views.generic import ListView
 from django.utils import timezone
 
 from .models import Category, Post
@@ -56,3 +57,10 @@ def category_posts(request, category_slug):
         'post_list': post_list,
     }
     return render(request, template, context)
+
+
+class IndexListView(ListView):
+    model = Post
+    queryset = base_post_queryset()
+    template_name = 'blog/index.html'
+    paginate_by = 10
