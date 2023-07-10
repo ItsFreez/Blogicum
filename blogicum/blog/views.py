@@ -1,5 +1,5 @@
 from django.shortcuts import get_object_or_404, render
-from django.views.generic import ListView
+from django.views.generic import DetailView, ListView
 from django.utils import timezone
 
 from .models import Category, Post
@@ -18,27 +18,19 @@ def base_post_queryset():
     )
 
 
-def index(request):
-    """Отобразить 5 последних опубликованных постов на главной странице."""
-    template = 'blog/index.html'
-    post_list = base_post_queryset()[:5]
-    context = {
-        'post_list': post_list,
-    }
-    return render(request, template, context)
+class IndexListView(ListView):
+    """Вывести на главную страницу список постов."""
+    model = Post
+    queryset = base_post_queryset()
+    template_name = 'blog/index.html'
+    paginate_by = 10
 
 
-def post_detail(request, pk):
+class PostDetailView(DetailView):
     """Отобразить полное описание выбранного поста."""
-    template = 'blog/detail.html'
-    post = get_object_or_404(
-        base_post_queryset(),
-        pk=pk
-    )
-    context = {
-        'post': post,
-    }
-    return render(request, template, context)
+    model = Post
+    queryset = base_post_queryset()
+    template_name = 'blog/detail.html'
 
 
 def category_posts(request, category_slug):
@@ -57,10 +49,3 @@ def category_posts(request, category_slug):
         'post_list': post_list,
     }
     return render(request, template, context)
-
-
-class IndexListView(ListView):
-    model = Post
-    queryset = base_post_queryset()
-    template_name = 'blog/index.html'
-    paginate_by = 10
