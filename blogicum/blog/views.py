@@ -41,27 +41,28 @@ class PostDetailView(DetailView):
         context = super().get_context_data(**kwargs)
         context['form'] = CommentForm()
         context['comments'] = (
-            self.object.comments.select_related('author')
+            self.object.comments.select_related('author', 'post')
         )
         return context
 
 
 class CommentCreateView(LoginRequiredMixin, CreateView):
-    object = None
+    post = None
     model = Comment
     form_class = CommentForm
+    template_name = 'includes/comments.html'
 
     def dispatch(self, request, *args, **kwargs):
-        self.object = get_object_or_404(Post, pk=kwargs['pk'])
+        self.post = get_object_or_404(Post, pk=kwargs['pk'])
         return super().dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):
         form.instance.author = self.request.user
-        form.instance.post = self.object
+        form.instance.post = self.post
         return super().form_valid(form)
 
     def get_success_url(self):
-        return reverse('blog:detail', kwargs={'pk': self.object.pk})
+        return reverse('blog:post_detail', kwargs={'pk': self.post.pk})
 
 
 class CategoryListView(ListView):
