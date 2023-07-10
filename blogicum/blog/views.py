@@ -1,6 +1,8 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import get_object_or_404, render
-from django.views.generic import CreateView, DetailView, ListView
+from django.views.generic import (
+    CreateView, DeleteView, DetailView, ListView, UpdateView
+)
 from django.utils import timezone
 from django.urls import reverse
 
@@ -78,6 +80,31 @@ class PostCreateView(LoginRequiredMixin, CreateView):
     def form_valid(self, form):
         form.instance.author = self.request.user
         return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse('blog:profile', kwargs={'username': self.request.user})
+
+
+class PostUpdateView(LoginRequiredMixin, UpdateView):
+    model = Post
+    form_class = PostForm
+    template_name = 'blog/create.html'
+
+    def dispatch(self, request, *args, **kwargs):
+        get_object_or_404(Post, pk=kwargs['pk'], author=request.user)
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_success_url(self):
+        return reverse('blog:post_detail', kwargs={'pk': self.post.id})
+
+
+class PostDeleteView(LoginRequiredMixin, DeleteView):
+    model = Post
+    template_name = 'blog/create.html'
+
+    def dispatch(self, request, *args, **kwargs):
+        get_object_or_404(Post, pk=kwargs['pk'], author=request.user)
+        return super().dispatch(request, *args, **kwargs)
 
     def get_success_url(self):
         return reverse('blog:profile', kwargs={'username': self.request.user})
