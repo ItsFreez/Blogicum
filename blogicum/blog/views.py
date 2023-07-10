@@ -66,9 +66,7 @@ class CommentCreateView(LoginRequiredMixin, CreateView):
 
 
 class CategoryListView(ListView):
-    model = Category
-    slug_field = 'category_slug'
-    slug_url_kwarg = 'category_slug'
+    model = Post
     template_name = 'blog/category.html'
     paginate_by = 10
 
@@ -76,16 +74,13 @@ class CategoryListView(ListView):
         context = super().get_context_data(**kwargs)
         context['category'] = get_object_or_404(
             Category,
-            slug=kwargs['slug']
+            slug=self.kwargs['category_slug']
         )
         return context
 
     def get_queryset(self):
-        return Post.objects.filter(
-            category__slug=self.kwargs['slug'],
-            is_published=True,
-            pub_date__lte=timezone.now(),
-        )
+        return base_post_queryset().filter(
+            category__slug=self.kwargs['category_slug'])
 
 
 def category_posts(request, category_slug):
