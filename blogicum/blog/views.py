@@ -69,17 +69,23 @@ class CategoryListView(ListView):
     model = Category
     slug_field = 'category_slug'
     slug_url_kwarg = 'category_slug'
-    queryset = base_post_queryset()
     template_name = 'blog/category.html'
     paginate_by = 10
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['category'] = Category.objects.filter(
-            slug=self.kwargs['category_slug'],
-            is_published=True
+        context['category'] = get_object_or_404(
+            Category,
+            slug=kwargs['slug']
         )
         return context
+
+    def get_queryset(self):
+        return Post.objects.filter(
+            category__slug=self.kwargs['slug'],
+            is_published=True,
+            pub_date__lte=timezone.now(),
+        )
 
 
 def category_posts(request, category_slug):
