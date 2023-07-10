@@ -6,8 +6,8 @@ from django.views.generic import (
 from django.utils import timezone
 from django.urls import reverse
 
-from .forms import PostForm
-from .models import Category, Post, User
+from .forms import CommentForm, PostForm
+from .models import Category, Comment, Post, User
 
 
 def base_post_queryset():
@@ -36,6 +36,32 @@ class PostDetailView(DetailView):
     model = Post
     queryset = base_post_queryset()
     template_name = 'blog/detail.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['form'] = CommentForm()
+        context['comments'] = (
+            self.object.comments.select_related('author')
+        )
+        return context
+
+
+class CommentCreateView(LoginRequiredMixin, CreateView):
+    object = None
+    model = Comment
+    form_class = CommentForm
+
+    def dispatch(self, request, *args, **kwargs):
+        self.object = get_object_or_404(Post, pk=kwargs['pk'])
+        return super().dispatch(request, *args, **kwargs)
+
+    def form_valid(self, form):
+        form.instance.author = self.request.user
+        form.instance.post = self.object
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse('blog:detail', kwargs={'pk': self.object.pk})
 
 
 class CategoryDetailView(ListView):
@@ -86,16 +112,21 @@ class PostCreateView(LoginRequiredMixin, CreateView):
 
 
 class PostUpdateView(LoginRequiredMixin, UpdateView):
+    object = None
     model = Post
     form_class = PostForm
     template_name = 'blog/create.html'
 
     def dispatch(self, request, *args, **kwargs):
-        get_object_or_404(Post, pk=kwargs['pk'], author=request.user)
+        self.object = get_object_or_404(
+            Post,
+            pk=kwargs['pk'],
+            author=request.user
+        )
         return super().dispatch(request, *args, **kwargs)
 
     def get_success_url(self):
-        return reverse('blog:post_detail', kwargs={'pk': self.post.id})
+        return reverse('blog:post_detail', kwargs={'pk': self.object.pk})
 
 
 class PostDeleteView(LoginRequiredMixin, DeleteView):
