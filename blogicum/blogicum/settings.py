@@ -86,6 +86,8 @@ CSRF_FAILURE_VIEW = 'core.views.csrf_failure'
 
 LANGUAGE_CODE = 'ru-RU'
 
+MEDIA_ROOT = BASE_DIR / 'media'
+
 TIME_ZONE = 'Europe/Moscow'
 
 USE_I18N = True
