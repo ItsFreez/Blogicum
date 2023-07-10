@@ -84,11 +84,10 @@ class CategoryListView(ListView):
             category__slug=self.kwargs['category_slug'])
 
 
-class ProfileDetailView(DetailView):
-    model = User
-    slug_field = 'username'
-    slug_url_kwarg = 'username'
+class ProfileListView(ListView):
+    model = Post
     template_name = 'blog/profile.html'
+    paginate_by = 10
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
