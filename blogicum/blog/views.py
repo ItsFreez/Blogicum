@@ -1,5 +1,5 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, redirect
 from django.views.generic import (
     CreateView, DeleteView, DetailView, ListView, UpdateView
 )
@@ -190,8 +190,9 @@ class PostUpdateView(LoginRequiredMixin, UpdateView):
         self.post_object = get_object_or_404(
             Post,
             pk=kwargs['pk'],
-            author=request.user
         )
+        if self.post_object.author != request.user:
+            return redirect('blog:post_detail', self.kwargs['pk'])
         return super().dispatch(request, *args, **kwargs)
 
     def get_success_url(self):
