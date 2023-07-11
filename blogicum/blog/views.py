@@ -65,7 +65,6 @@ class CommentCreateView(LoginRequiredMixin, CreateView):
 
 
 class CommentUpdateView(LoginRequiredMixin, UpdateView):
-    post_object = None
     comment_object = None
     model = Comment
     form_class = CommentForm
@@ -74,17 +73,15 @@ class CommentUpdateView(LoginRequiredMixin, UpdateView):
     def dispatch(self, request, *args, **kwargs):
         self.comment_object = get_object_or_404(
             Comment,
-            pk=kwargs['comment_id'],
+            pk=kwargs['pk'],
+            post_id=kwargs['id'],
             author=request.user
-        )
-        self.post_object = get_object_or_404(
-            Post,
-            pk=kwargs['post_id']
         )
         return super().dispatch(request, *args, **kwargs)
 
     def get_success_url(self):
-        return reverse('blog:post_detail', kwargs={'pk': self.post_object.pk})
+        return reverse('blog:post_detail',
+                       kwargs={'pk': self.comment_object.post_id})
 
 
 class CommentDeleteView(LoginRequiredMixin, DeleteView):
@@ -95,7 +92,9 @@ class CommentDeleteView(LoginRequiredMixin, DeleteView):
     def dispatch(self, request, *args, **kwargs):
         self.comment_object = get_object_or_404(
             Comment,
-            pk=kwargs['comment_id']
+            pk=kwargs['pk'],
+            post_id=kwargs['id'],
+            author=request.user
         )
         return super().dispatch(request, *args, **kwargs)
 
