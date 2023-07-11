@@ -142,12 +142,23 @@ class ProfileListView(ListView):
 
 
 class ProfileUpdateView(UpdateView):
+    user_object = None
     model = User
     form_class = MyUserForm
+    slug_field = 'username'
+    slug_url_kwarg = 'username'
     template_name = 'blog/user.html'
 
+    def dispatch(self, request, *args, **kwargs):
+        self.user_object = get_object_or_404(
+            User,
+            username=kwargs['username']
+            )
+        return super().dispatch(request, *args, **kwargs)
+
     def get_success_url(self):
-        return reverse('blog:profile', kwargs={'username': self.request.user})
+        return reverse('blog:profile',
+                       kwargs={'username': self.user_object.username})
 
 
 class PostCreateView(LoginRequiredMixin, CreateView):
