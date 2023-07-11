@@ -6,14 +6,14 @@ from django.views.generic.edit import CreateView
 from django.urls import include, path, reverse_lazy
 
 
-handler404 = 'core.views.page_not_found'
-handler500 = 'core.views.server_error'
+handler404 = 'pages.views.page_not_found'
+handler500 = 'pages.views.server_error'
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('blog.urls', namespace='blog')),
     path('auth/', include('django.contrib.auth.urls')),
-    path('auth/registration',
+    path('auth/registration/',
          CreateView.as_view(
              template_name='registration/registration_form.html',
              form_class=UserCreationForm,
