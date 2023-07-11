@@ -64,6 +64,46 @@ class CommentCreateView(LoginRequiredMixin, CreateView):
         return reverse('blog:post_detail', kwargs={'pk': self.post_object.pk})
 
 
+class CommentUpdateView(LoginRequiredMixin, UpdateView):
+    post_object = None
+    comment_object = None
+    model = Comment
+    form_class = CommentForm
+    template_name = 'blog/comment.html'
+
+    def dispatch(self, request, *args, **kwargs):
+        self.comment_object = get_object_or_404(
+            Comment,
+            pk=kwargs['comment_id'],
+            author=request.user
+        )
+        self.post_object = get_object_or_404(
+            Post,
+            pk=kwargs['post_id']
+        )
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_success_url(self):
+        return reverse('blog:post_detail', kwargs={'pk': self.post_object.pk})
+
+
+class CommentDeleteView(LoginRequiredMixin, DeleteView):
+    comment_object = None
+    model = Comment
+    template_name = 'blog/comment.html'
+
+    def dispatch(self, request, *args, **kwargs):
+        self.comment_object = get_object_or_404(
+            Comment,
+            pk=kwargs['comment_id']
+        )
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_success_url(self):
+        return reverse('blog:post_detail',
+                       kwargs={'pk': self.comment_object.post_id})
+
+
 class CategoryListView(ListView):
     """Отобразить все опубликованные посты выбранной категории."""
     model = Post
