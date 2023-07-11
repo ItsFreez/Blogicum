@@ -10,44 +10,123 @@ from .forms import CommentForm, MyUserForm, PostForm
 from .models import Category, Comment, Post, User
 
 
-def base_post_queryset():
-    """Вернуть QuerySet модели Post c подключенными связанными полями."""
-    return Post.objects.select_related(
+class PostQuerySetMixin:
+    """
+    1. Создать базовый QuerySet объекта Post со всеми связанными моделями.
+    2. Создать публичный QuerySet для отображения всем посетителям.
+    """
+    model = Post
+    queryset = Post.objects.select_related(
         'author',
         'category',
         'location'
+        )
+    pub_queryset = queryset.filter(
+            is_published=True,
+            category__is_published=True,
+            pub_date__lte=timezone.now()
     )
 
 
-class IndexListView(ListView):
+class IndexListView(PostQuerySetMixin, ListView):
     """Вывести на главную страницу список постов."""
-    model = Post
-    queryset = base_post_queryset().filter(
-        is_published=True,
-        category__is_published=True,
-        pub_date__lte=timezone.now()
-        )
     template_name = 'blog/index.html'
     paginate_by = 10
 
 
-class PostDetailView(DetailView):
+class PostDetailView(PostQuerySetMixin, DetailView):
     """Отобразить полное описание выбранного поста."""
-    model = Post
-    queryset = base_post_queryset().filter(
-        is_published=True,
-        category__is_published=True,
-        pub_date__lte=timezone.now()
-        )
+    post_object = None
     template_name = 'blog/detail.html'
+
+    def dispatch(self, request, *args, **kwargs):
+        self.post_object = get_object_or_404(
+            Post,
+            pk=kwargs['pk']
+            )
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_queryset(self):
+        if self.post_object.author != self.request.user:
+            return super().pub_queryset.filter(
+                pk=self.kwargs['pk'],
+            )
+        return super().queryset.filter(
+            pk=self.kwargs['pk']
+        )
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['form'] = CommentForm()
         context['comments'] = (
-            self.object.comments.select_related('author', 'post')
+            self.object.comments.select_related('author')
         )
         return context
+
+
+class CategoryListView(PostQuerySetMixin, ListView):
+    """Отобразить все опубликованные посты выбранной категории."""
+    template_name = 'blog/category.html'
+    paginate_by = 10
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['category'] = get_object_or_404(
+            Category,
+            slug=self.kwargs['category_slug'],
+            is_published=True
+        )
+        return context
+
+    def get_queryset(self):
+        return self.pub_queryset.filter(
+            category__slug=self.kwargs['category_slug']
+        )
+
+
+class ProfileListView(PostQuerySetMixin, ListView):
+    """Отобразить страницу пользователя с опубликованными записями."""
+    user_object = None
+    template_name = 'blog/profile.html'
+    paginate_by = 10
+
+    def dispatch(self, request, *args, **kwargs):
+        self.user_object = get_object_or_404(
+            User,
+            username=self.kwargs['username']
+            )
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['profile'] = self.user_object
+        return context
+
+    def get_queryset(self):
+        if self.user_object != self.request.user:
+            return super().pub_queryset.filter(
+                author__username=self.kwargs['username'])
+        return super().queryset.filter(
+            author__username=self.kwargs['username'])
+
+
+class ProfileUpdateView(UpdateView):
+    user_object = None
+    model = User
+    form_class = MyUserForm
+    template_name = 'blog/user.html'
+
+    def dispatch(self, request, *args, **kwargs):
+        self.user_object = get_object_or_404(
+            User,
+            pk=kwargs['pk'],
+            username=request.user
+            )
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_success_url(self):
+        return reverse('blog:profile',
+                       kwargs={'username': self.user_object.username})
 
 
 class CommentCreateView(LoginRequiredMixin, CreateView):
@@ -107,76 +186,6 @@ class CommentDeleteView(LoginRequiredMixin, DeleteView):
     def get_success_url(self):
         return reverse('blog:post_detail',
                        kwargs={'pk': self.comment_object.post_id})
-
-
-class CategoryListView(ListView):
-    """Отобразить все опубликованные посты выбранной категории."""
-    model = Post
-    template_name = 'blog/category.html'
-    paginate_by = 10
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['category'] = get_object_or_404(
-            Category,
-            slug=self.kwargs['category_slug'],
-            is_published=True
-        )
-        return context
-
-    def get_queryset(self):
-        return base_post_queryset().filter(
-            is_published=True,
-            category__is_published=True,
-            pub_date__lte=timezone.now(),
-            category__slug=self.kwargs['category_slug'])
-
-
-class ProfileListView(ListView):
-    user_object = None
-    model = Post
-    template_name = 'blog/profile.html'
-    paginate_by = 10
-
-    def dispatch(self, request, *args, **kwargs):
-        self.user_object = get_object_or_404(
-            User,
-            username=self.kwargs['username']
-            )
-        return super().dispatch(request, *args, **kwargs)
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['profile'] = self.user_object
-        return context
-
-    def get_queryset(self):
-        if self.user_object != self.request.user:
-            return base_post_queryset().filter(
-                is_published=True,
-                category__is_published=True,
-                author__username=self.kwargs['username'])
-        return base_post_queryset().filter(
-            author__username=self.kwargs['username'])
-
-
-class ProfileUpdateView(UpdateView):
-    user_object = None
-    model = User
-    form_class = MyUserForm
-    template_name = 'blog/user.html'
-
-    def dispatch(self, request, *args, **kwargs):
-        self.user_object = get_object_or_404(
-            User,
-            pk=kwargs['pk'],
-            username=request.user
-            )
-        return super().dispatch(request, *args, **kwargs)
-
-    def get_success_url(self):
-        return reverse('blog:profile',
-                       kwargs={'username': self.user_object.username})
 
 
 class PostCreateView(LoginRequiredMixin, CreateView):
