@@ -10,26 +10,8 @@ from .forms import CommentForm, MyUserForm, PostForm
 from .models import Category, Comment, Post, User
 
 
-class PostQuerySetMixin:
-    """
-    1. Создать базовый QuerySet объекта Post со всеми связанными моделями.
-    2. Создать публичный QuerySet для отображения всем посетителям.
-    """
-    model = Post
-    queryset = Post.objects.select_related(
-        'author',
-        'category',
-        'location'
-        )
-    pub_queryset = queryset.filter(
-            is_published=True,
-            category__is_published=True,
-            pub_date__lte=timezone.now()
-    )
-
-
 class CommentChangeMixin:
-    """Отобразить данные комментария, соответствующего поста."""
+    """Отобразить данные для изменения комментария, соответствующего поста."""
     comment_object = None
     model = Comment
     template_name = 'blog/comment.html'
@@ -47,6 +29,40 @@ class CommentChangeMixin:
     def get_success_url(self):
         return reverse('blog:post_detail',
                        kwargs={'pk': self.comment_object.post_id})
+
+
+class PostChangeMixin:
+    """Отобразить данные для изменения поста."""
+    post_object = None
+    model = Post
+    template_name = 'blog/create.html'
+
+    def dispatch(self, request, *args, **kwargs):
+        self.post_object = get_object_or_404(
+            Post,
+            pk=kwargs['pk'],
+        )
+        if self.post_object.author != request.user:
+            return redirect('blog:post_detail', self.kwargs['pk'])
+        return super().dispatch(request, *args, **kwargs)
+
+
+class PostQuerySetMixin:
+    """
+    1. Создать базовый QuerySet объекта Post со всеми связанными моделями.
+    2. Создать публичный QuerySet для отображения всем посетителям.
+    """
+    model = Post
+    queryset = Post.objects.select_related(
+        'author',
+        'category',
+        'location'
+        )
+    pub_queryset = queryset.filter(
+            is_published=True,
+            category__is_published=True,
+            pub_date__lte=timezone.now()
+    )
 
 
 class IndexListView(ListView):
@@ -161,6 +177,7 @@ class ProfileUpdateView(UpdateView):
 
 
 class CommentCreateView(LoginRequiredMixin, CreateView):
+    """Отобразить форму для создания комментария."""
     post_object = None
     model = Comment
     form_class = CommentForm
@@ -179,14 +196,17 @@ class CommentCreateView(LoginRequiredMixin, CreateView):
 
 
 class CommentUpdateView(CommentChangeMixin, LoginRequiredMixin, UpdateView):
+    """Отобразить форму для изменения комментария."""
     form_class = CommentForm
 
 
 class CommentDeleteView(CommentChangeMixin, LoginRequiredMixin, DeleteView):
+    """Отобразить страницу удаления комментария."""
     pass
 
 
 class PostCreateView(LoginRequiredMixin, CreateView):
+    """Отобразить форму создания поста."""
     model = Post
     form_class = PostForm
     template_name = 'blog/create.html'
@@ -199,42 +219,16 @@ class PostCreateView(LoginRequiredMixin, CreateView):
         return reverse('blog:profile', kwargs={'username': self.request.user})
 
 
-class PostUpdateView(LoginRequiredMixin, UpdateView):
-    post_object = None
-    model = Post
+class PostUpdateView(PostChangeMixin, LoginRequiredMixin, UpdateView):
+    """Отобразить форму для изменения поста."""
     form_class = PostForm
-    template_name = 'blog/create.html'
-
-    def dispatch(self, request, *args, **kwargs):
-        self.post_object = get_object_or_404(
-            Post,
-            pk=kwargs['pk'],
-        )
-        if self.post_object.author != request.user:
-            return redirect('blog:post_detail', self.kwargs['pk'])
-        return super().dispatch(request, *args, **kwargs)
 
     def get_success_url(self):
         return reverse('blog:post_detail', kwargs={'pk': self.post_object.pk})
 
 
-class PostDeleteView(LoginRequiredMixin, DeleteView):
-    post_object = None
-    model = Post
-    template_name = 'blog/create.html'
-
-    def dispatch(self, request, *args, **kwargs):
-        self.post_object = get_object_or_404(
-            Post,
-            pk=kwargs['pk']
-        )
-        if self.post_object.author != request.user:
-            return redirect('blog:post_detail', self.kwargs['pk'])
-        return super().dispatch(request, *args, **kwargs)
-
-    def form_valid(self, form):
-        form.instance.author = self.request.user
-        return super().form_valid(form)
+class PostDeleteView(PostChangeMixin, LoginRequiredMixin, DeleteView):
+    """Отобразить страницу удаления поста."""
 
     def get_success_url(self):
         return reverse('blog:profile', kwargs={'username': self.request.user})
