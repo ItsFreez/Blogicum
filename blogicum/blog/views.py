@@ -141,18 +141,16 @@ class ProfileListView(ListView):
             author__username=self.kwargs['username'])
 
 
-class ProfileUpdateView(UpdateView):
+class ProfileUpdateView(CreateView):
     user_object = None
     model = User
     form_class = MyUserForm
-    slug_field = 'username'
-    slug_url_kwarg = 'username'
     template_name = 'blog/user.html'
 
     def dispatch(self, request, *args, **kwargs):
         self.user_object = get_object_or_404(
             User,
-            username=kwargs['username']
+            username=self.request.user
             )
         return super().dispatch(request, *args, **kwargs)
 
