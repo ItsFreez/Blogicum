@@ -182,12 +182,21 @@ class PostUpdateView(LoginRequiredMixin, UpdateView):
 
 
 class PostDeleteView(LoginRequiredMixin, DeleteView):
+    post_object = None
     model = Post
     template_name = 'blog/create.html'
 
     def dispatch(self, request, *args, **kwargs):
-        get_object_or_404(Post, pk=kwargs['pk'], author=request.user)
+        self.post_object = get_object_or_404(
+            Post,
+            pk=kwargs['pk'],
+            author=request.user
+        )
         return super().dispatch(request, *args, **kwargs)
+
+    def form_valid(self, form):
+        form.instance.author = self.request.user
+        return super().form_valid(form)
 
     def get_success_url(self):
         return reverse('blog:profile', kwargs={'username': self.request.user})
