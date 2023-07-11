@@ -6,7 +6,7 @@ from django.views.generic import (
 from django.utils import timezone
 from django.urls import reverse
 
-from .forms import CommentForm, PostForm
+from .forms import CommentForm, MyUserForm, PostForm
 from .models import Category, Comment, Post, User
 
 
@@ -47,21 +47,21 @@ class PostDetailView(DetailView):
 
 
 class CommentCreateView(LoginRequiredMixin, CreateView):
-    object = None
+    post_object = None
     model = Comment
     form_class = CommentForm
 
     def dispatch(self, request, *args, **kwargs):
-        self.object = get_object_or_404(Post, pk=kwargs['pk'])
+        self.post_object = get_object_or_404(Post, pk=kwargs['pk'])
         return super().dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):
         form.instance.author = self.request.user
-        form.instance.post = self.object
+        form.instance.post = self.post_object
         return super().form_valid(form)
 
     def get_success_url(self):
-        return reverse('blog:post_detail', kwargs={'pk': self.object.pk})
+        return reverse('blog:post_detail', kwargs={'pk': self.post_object.pk})
 
 
 class CategoryListView(ListView):
@@ -103,7 +103,12 @@ class ProfileListView(ListView):
 
 
 class ProfileUpdateView(UpdateView):
-    pass
+    model = User
+    form_class = MyUserForm
+    template_name = 'blog/user.html'
+
+    def get_success_url(self):
+        return reverse('blog:profile', kwargs={'username': self.request.user})
 
 
 class PostCreateView(LoginRequiredMixin, CreateView):
@@ -120,13 +125,13 @@ class PostCreateView(LoginRequiredMixin, CreateView):
 
 
 class PostUpdateView(LoginRequiredMixin, UpdateView):
-    object = None
+    post_object = None
     model = Post
     form_class = PostForm
     template_name = 'blog/create.html'
 
     def dispatch(self, request, *args, **kwargs):
-        self.object = get_object_or_404(
+        self.post_object = get_object_or_404(
             Post,
             pk=kwargs['pk'],
             author=request.user
@@ -134,7 +139,7 @@ class PostUpdateView(LoginRequiredMixin, UpdateView):
         return super().dispatch(request, *args, **kwargs)
 
     def get_success_url(self):
-        return reverse('blog:post_detail', kwargs={'pk': self.object.pk})
+        return reverse('blog:post_detail', kwargs={'pk': self.post_object.pk})
 
 
 class PostDeleteView(LoginRequiredMixin, DeleteView):
