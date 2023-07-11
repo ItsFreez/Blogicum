@@ -28,6 +28,27 @@ class PostQuerySetMixin:
     )
 
 
+class CommentChangeMixin:
+    """Отобразить данные комментария, соответствующего поста."""
+    comment_object = None
+    model = Comment
+    template_name = 'blog/comment.html'
+
+    def dispatch(self, request, *args, **kwargs):
+        self.comment_object = get_object_or_404(
+            Comment,
+            pk=kwargs['pk'],
+            post_id=kwargs['id'],
+        )
+        if self.comment_object.author != request.user:
+            return redirect('blog:post_detail', self.kwargs['id'])
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_success_url(self):
+        return reverse('blog:post_detail',
+                       kwargs={'pk': self.comment_object.post_id})
+
+
 class IndexListView(ListView):
     """Вывести на главную страницу список постов."""
     template_name = 'blog/index.html'
@@ -120,6 +141,7 @@ class ProfileListView(PostQuerySetMixin, ListView):
 
 
 class ProfileUpdateView(UpdateView):
+    """Отобразить форму для изменения данных пользователя."""
     user_object = None
     model = User
     form_class = MyUserForm
@@ -156,45 +178,12 @@ class CommentCreateView(LoginRequiredMixin, CreateView):
         return reverse('blog:post_detail', kwargs={'pk': self.post_object.pk})
 
 
-class CommentUpdateView(LoginRequiredMixin, UpdateView):
-    comment_object = None
-    model = Comment
+class CommentUpdateView(CommentChangeMixin, LoginRequiredMixin, UpdateView):
     form_class = CommentForm
-    template_name = 'blog/comment.html'
-
-    def dispatch(self, request, *args, **kwargs):
-        self.comment_object = get_object_or_404(
-            Comment,
-            pk=kwargs['pk'],
-            post_id=kwargs['id'],
-        )
-        if self.comment_object.author != request.user:
-            return redirect('blog:post_detail', self.kwargs['id'])
-        return super().dispatch(request, *args, **kwargs)
-
-    def get_success_url(self):
-        return reverse('blog:post_detail',
-                       kwargs={'pk': self.comment_object.post_id})
 
 
-class CommentDeleteView(LoginRequiredMixin, DeleteView):
-    comment_object = None
-    model = Comment
-    template_name = 'blog/comment.html'
-
-    def dispatch(self, request, *args, **kwargs):
-        self.comment_object = get_object_or_404(
-            Comment,
-            pk=kwargs['pk'],
-            post_id=kwargs['id'],
-        )
-        if self.comment_object.author != request.user:
-            return redirect('blog:post_detail', self.kwargs['id'])
-        return super().dispatch(request, *args, **kwargs)
-
-    def get_success_url(self):
-        return reverse('blog:post_detail',
-                       kwargs={'pk': self.comment_object.post_id})
+class CommentDeleteView(CommentChangeMixin, LoginRequiredMixin, DeleteView):
+    pass
 
 
 class PostCreateView(LoginRequiredMixin, CreateView):
