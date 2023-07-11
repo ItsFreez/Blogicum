@@ -28,9 +28,18 @@ class PostQuerySetMixin:
     )
 
 
-class IndexListView(PostQuerySetMixin, ListView):
+class IndexListView(ListView):
     """Вывести на главную страницу список постов."""
     template_name = 'blog/index.html'
+    queryset = Post.objects.select_related(
+        'author',
+        'category',
+        'location'
+        ).filter(
+            is_published=True,
+            category__is_published=True,
+            pub_date__lte=timezone.now()
+    )
     paginate_by = 10
 
 
