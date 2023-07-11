@@ -57,11 +57,11 @@ class PostQuerySetMixin:
         'author',
         'category',
         'location'
-        )
+    )
     pub_queryset = queryset.filter(
-            is_published=True,
-            category__is_published=True,
-            pub_date__lte=timezone.now()
+        is_published=True,
+        category__is_published=True,
+        pub_date__lte=timezone.now()
     )
 
 
@@ -72,10 +72,10 @@ class IndexListView(ListView):
         'author',
         'category',
         'location'
-        ).filter(
-            is_published=True,
-            category__is_published=True,
-            pub_date__lte=timezone.now()
+    ).filter(
+        is_published=True,
+        category__is_published=True,
+        pub_date__lte=timezone.now()
     )
     paginate_by = 10
 
@@ -89,7 +89,7 @@ class PostDetailView(PostQuerySetMixin, DetailView):
         self.post_object = get_object_or_404(
             Post,
             pk=kwargs['pk']
-            )
+        )
         return super().dispatch(request, *args, **kwargs)
 
     def get_queryset(self):
@@ -140,7 +140,7 @@ class ProfileListView(PostQuerySetMixin, ListView):
         self.user_object = get_object_or_404(
             User,
             username=self.kwargs['username']
-            )
+        )
         return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
@@ -168,7 +168,7 @@ class ProfileUpdateView(UpdateView):
             User,
             pk=kwargs['pk'],
             username=request.user
-            )
+        )
         return super().dispatch(request, *args, **kwargs)
 
     def get_success_url(self):
