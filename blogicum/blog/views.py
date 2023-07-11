@@ -79,8 +79,9 @@ class CommentUpdateView(LoginRequiredMixin, UpdateView):
             Comment,
             pk=kwargs['pk'],
             post_id=kwargs['id'],
-            author=request.user
         )
+        if self.comment_object.author != request.user:
+            return redirect('blog:post_detail', self.kwargs['id'])
         return super().dispatch(request, *args, **kwargs)
 
     def get_success_url(self):
@@ -98,8 +99,9 @@ class CommentDeleteView(LoginRequiredMixin, DeleteView):
             Comment,
             pk=kwargs['pk'],
             post_id=kwargs['id'],
-            author=request.user
         )
+        if self.comment_object.author != request.user:
+            return redirect('blog:post_detail', self.kwargs['id'])
         return super().dispatch(request, *args, **kwargs)
 
     def get_success_url(self):
@@ -131,19 +133,29 @@ class CategoryListView(ListView):
 
 
 class ProfileListView(ListView):
+    user_object = None
     model = Post
     template_name = 'blog/profile.html'
     paginate_by = 10
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['profile'] = get_object_or_404(
+    def dispatch(self, request, *args, **kwargs):
+        self.user_object = get_object_or_404(
             User,
             username=self.kwargs['username']
-        )
+            )
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['profile'] = self.user_object
         return context
 
     def get_queryset(self):
+        if self.user_object != self.request.user:
+            return base_post_queryset().filter(
+                is_published=True,
+                category__is_published=True,
+                author__username=self.kwargs['username'])
         return base_post_queryset().filter(
             author__username=self.kwargs['username'])
 
@@ -207,9 +219,10 @@ class PostDeleteView(LoginRequiredMixin, DeleteView):
     def dispatch(self, request, *args, **kwargs):
         self.post_object = get_object_or_404(
             Post,
-            pk=kwargs['pk'],
-            author=request.user
+            pk=kwargs['pk']
         )
+        if self.post_object.author != request.user:
+            return redirect('blog:post_detail', self.kwargs['pk'])
         return super().dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):
