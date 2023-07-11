@@ -38,12 +38,12 @@ urlpatterns = [
          views.CategoryListView.as_view(),
          name='category_posts'
          ),
-    path('profile/edit_profile/',
-         views.ProfileUpdateView.as_view(),
-         name='edit_profile'
-         ),
     path('profile/<slug:username>/',
          views.ProfileListView.as_view(),
          name='profile'
+         ),
+    path('profile/<int:pk>/edit_profile/',
+         views.ProfileUpdateView.as_view(),
+         name='edit_profile'
          ),
 ]

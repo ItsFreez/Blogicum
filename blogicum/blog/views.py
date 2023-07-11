@@ -16,17 +16,17 @@ def base_post_queryset():
         'author',
         'category',
         'location'
-    ).filter(
-        is_published=True,
-        category__is_published=True,
-        pub_date__lte=timezone.now()
     )
 
 
 class IndexListView(ListView):
     """Вывести на главную страницу список постов."""
     model = Post
-    queryset = base_post_queryset()
+    queryset = base_post_queryset().filter(
+        is_published=True,
+        category__is_published=True,
+        pub_date__lte=timezone.now()
+        )
     template_name = 'blog/index.html'
     paginate_by = 10
 
@@ -34,7 +34,11 @@ class IndexListView(ListView):
 class PostDetailView(DetailView):
     """Отобразить полное описание выбранного поста."""
     model = Post
-    queryset = base_post_queryset()
+    queryset = base_post_queryset().filter(
+        is_published=True,
+        category__is_published=True,
+        pub_date__lte=timezone.now()
+        )
     template_name = 'blog/detail.html'
 
     def get_context_data(self, **kwargs):
@@ -120,6 +124,9 @@ class CategoryListView(ListView):
 
     def get_queryset(self):
         return base_post_queryset().filter(
+            is_published=True,
+            category__is_published=True,
+            pub_date__lte=timezone.now(),
             category__slug=self.kwargs['category_slug'])
 
 
@@ -141,7 +148,7 @@ class ProfileListView(ListView):
             author__username=self.kwargs['username'])
 
 
-class ProfileUpdateView(CreateView):
+class ProfileUpdateView(UpdateView):
     user_object = None
     model = User
     form_class = MyUserForm
@@ -150,7 +157,8 @@ class ProfileUpdateView(CreateView):
     def dispatch(self, request, *args, **kwargs):
         self.user_object = get_object_or_404(
             User,
-            username=self.request.user
+            pk=kwargs['pk'],
+            username=request.user
             )
         return super().dispatch(request, *args, **kwargs)
 
