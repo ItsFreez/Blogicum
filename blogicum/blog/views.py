@@ -16,13 +16,13 @@ class CommentChangeMixin:
     """Отобразить данные для изменения комментария, соответствующего поста."""
 
     model = Comment
+    pk_url_kwarg = 'comment_id'
     template_name = 'blog/comment.html'
 
     def dispatch(self, request, *args, **kwargs):
         comment_object = get_object_or_404(
             Comment,
-            pk=kwargs['comment_id'],
-            post_id=kwargs['post_id'],
+            pk=kwargs['comment_id']
         )
         if comment_object.author != request.user:
             return redirect('blog:post_detail', kwargs['post_id'])
@@ -37,6 +37,7 @@ class PostChangeMixin:
     """Отобразить данные для изменения поста."""
 
     model = Post
+    pk_url_kwarg = 'post_id'
     template_name = 'blog/create.html'
 
     def dispatch(self, request, *args, **kwargs):
@@ -195,13 +196,12 @@ class CommentUpdateView(CommentChangeMixin, LoginRequiredMixin, UpdateView):
     """Отобразить форму для изменения комментария."""
 
     form_class = CommentForm
-    pk_url_kwarg = 'post_id'
 
 
 class CommentDeleteView(CommentChangeMixin, LoginRequiredMixin, DeleteView):
     """Отобразить страницу удаления комментария."""
 
-    pk_url_kwarg = 'post_id'
+    pass
 
 
 class PostCreateView(LoginRequiredMixin, CreateView):
@@ -223,7 +223,6 @@ class PostUpdateView(PostChangeMixin, LoginRequiredMixin, UpdateView):
     """Отобразить форму для изменения поста."""
 
     form_class = PostForm
-    pk_url_kwarg = 'post_id'
 
     def get_success_url(self):
         return reverse('blog:post_detail',
@@ -232,8 +231,6 @@ class PostUpdateView(PostChangeMixin, LoginRequiredMixin, UpdateView):
 
 class PostDeleteView(PostChangeMixin, LoginRequiredMixin, DeleteView):
     """Отобразить страницу удаления поста."""
-
-    pk_url_kwarg = 'post_id'
 
     def get_success_url(self):
         return reverse('blog:profile', kwargs={'username': self.request.user})
