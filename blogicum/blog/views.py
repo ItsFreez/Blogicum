@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Count
 from django.shortcuts import get_object_or_404, redirect
@@ -71,7 +72,7 @@ class IndexListView(PostQuerySetMixin, ListView):
     """Вывести на главную страницу список постов."""
 
     template_name = 'blog/index.html'
-    paginate_by = 10
+    paginate_by = settings.MAIN_PAGIN
 
     def get_queryset(self):
         return super().pub_queryset
