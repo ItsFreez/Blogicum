@@ -12,6 +12,7 @@ from .models import Category, Comment, Post, User
 
 class CommentChangeMixin:
     """Отобразить данные для изменения комментария, соответствующего поста."""
+
     comment_object = None
     model = Comment
     template_name = 'blog/comment.html'
@@ -33,16 +34,13 @@ class CommentChangeMixin:
 
 class PostChangeMixin:
     """Отобразить данные для изменения поста."""
-    post_object = None
+
     model = Post
     template_name = 'blog/create.html'
 
     def dispatch(self, request, *args, **kwargs):
-        self.post_object = get_object_or_404(
-            Post,
-            pk=kwargs['pk'],
-        )
-        if self.post_object.author != request.user:
+        post_object = get_object_or_404(Post, pk=kwargs['pk'])
+        if post_object.author != request.user:
             return redirect('blog:post_detail', self.kwargs['pk'])
         return super().dispatch(request, *args, **kwargs)
 
@@ -52,6 +50,7 @@ class PostQuerySetMixin:
     1. Создать базовый QuerySet объекта Post со всеми связанными моделями.
     2. Создать публичный QuerySet для отображения всем посетителям.
     """
+
     model = Post
     queryset = Post.objects.select_related(
         'author',
@@ -67,6 +66,7 @@ class PostQuerySetMixin:
 
 class IndexListView(ListView):
     """Вывести на главную страницу список постов."""
+
     template_name = 'blog/index.html'
     queryset = Post.objects.select_related(
         'author',
@@ -82,6 +82,7 @@ class IndexListView(ListView):
 
 class PostDetailView(PostQuerySetMixin, DetailView):
     """Отобразить полное описание выбранного поста."""
+
     post_object = None
     template_name = 'blog/detail.html'
 
@@ -112,6 +113,7 @@ class PostDetailView(PostQuerySetMixin, DetailView):
 
 class CategoryListView(PostQuerySetMixin, ListView):
     """Отобразить все опубликованные посты выбранной категории."""
+
     template_name = 'blog/category.html'
     paginate_by = 10
 
@@ -132,6 +134,7 @@ class CategoryListView(PostQuerySetMixin, ListView):
 
 class ProfileListView(PostQuerySetMixin, ListView):
     """Отобразить страницу пользователя с опубликованными записями."""
+
     user_object = None
     template_name = 'blog/profile.html'
     paginate_by = 10
@@ -158,6 +161,7 @@ class ProfileListView(PostQuerySetMixin, ListView):
 
 class ProfileUpdateView(LoginRequiredMixin, UpdateView):
     """Отобразить форму для изменения данных пользователя."""
+
     model = User
     form_class = MyUserForm
     template_name = 'blog/user.html'
@@ -176,6 +180,7 @@ class ProfileUpdateView(LoginRequiredMixin, UpdateView):
 
 class CommentCreateView(LoginRequiredMixin, CreateView):
     """Отобразить форму для создания комментария."""
+
     post_object = None
     model = Comment
     form_class = CommentForm
@@ -195,16 +200,19 @@ class CommentCreateView(LoginRequiredMixin, CreateView):
 
 class CommentUpdateView(CommentChangeMixin, LoginRequiredMixin, UpdateView):
     """Отобразить форму для изменения комментария."""
+
     form_class = CommentForm
 
 
 class CommentDeleteView(CommentChangeMixin, LoginRequiredMixin, DeleteView):
     """Отобразить страницу удаления комментария."""
+
     pass
 
 
 class PostCreateView(LoginRequiredMixin, CreateView):
     """Отобразить форму создания поста."""
+
     model = Post
     form_class = PostForm
     template_name = 'blog/create.html'
@@ -219,10 +227,11 @@ class PostCreateView(LoginRequiredMixin, CreateView):
 
 class PostUpdateView(PostChangeMixin, LoginRequiredMixin, UpdateView):
     """Отобразить форму для изменения поста."""
+
     form_class = PostForm
 
     def get_success_url(self):
-        return reverse('blog:post_detail', kwargs={'pk': self.post_object.pk})
+        return reverse('blog:post_detail', kwargs={'pk': self.kwargs['pk']})
 
 
 class PostDeleteView(PostChangeMixin, LoginRequiredMixin, DeleteView):
