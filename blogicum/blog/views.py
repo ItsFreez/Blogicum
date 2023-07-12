@@ -84,15 +84,12 @@ class PostDetailView(PostQuerySetMixin, DetailView):
     post_object = None
     template_name = 'blog/detail.html'
 
-    def dispatch(self, request, *args, **kwargs):
-        self.post_object = get_object_or_404(
-            Post,
-            pk=kwargs['pk']
-        )
-        return super().dispatch(request, *args, **kwargs)
-
     def get_queryset(self):
-        if self.post_object.author != self.request.user:
+        post_object = get_object_or_404(
+            Post,
+            pk=self.kwargs['pk']
+        )
+        if post_object.author != self.request.user:
             return super().pub_queryset.filter(
                 pk=self.kwargs['pk'],
             )
