@@ -15,23 +15,22 @@ from .models import Category, Comment, Post, User
 class CommentChangeMixin:
     """Отобразить данные для изменения комментария, соответствующего поста."""
 
-    comment_object = None
     model = Comment
     template_name = 'blog/comment.html'
 
     def dispatch(self, request, *args, **kwargs):
-        self.comment_object = get_object_or_404(
+        comment_object = get_object_or_404(
             Comment,
             pk=kwargs['pk'],
             post_id=kwargs['id'],
         )
-        if self.comment_object.author != request.user:
+        if comment_object.author != request.user:
             return redirect('blog:post_detail', self.kwargs['id'])
         return super().dispatch(request, *args, **kwargs)
 
     def get_success_url(self):
         return reverse('blog:post_detail',
-                       kwargs={'pk': self.comment_object.post_id})
+                       kwargs={'pk': self.kwargs['id']})
 
 
 class PostChangeMixin:
@@ -81,7 +80,6 @@ class IndexListView(PostQuerySetMixin, ListView):
 class PostDetailView(PostQuerySetMixin, DetailView):
     """Отобразить полное описание выбранного поста."""
 
-    post_object = None
     template_name = 'blog/detail.html'
 
     def get_queryset(self):
