@@ -113,18 +113,21 @@ class CategoryListView(PostQuerySetMixin, ListView):
     """Отобразить все опубликованные посты выбранной категории."""
 
     template_name = 'blog/category.html'
-    paginate_by = 10
+    paginate_by = settings.MAIN_PAGIN
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['category'] = get_object_or_404(
-            Category,
-            slug=self.kwargs['category_slug'],
-            is_published=True
+        context['category'] = Category.objects.get(
+            slug=self.kwargs['category_slug']
         )
         return context
 
     def get_queryset(self):
+        get_object_or_404(
+            Category,
+            slug=self.kwargs['category_slug'],
+            is_published=True
+        )
         return self.pub_queryset.filter(
             category__slug=self.kwargs['category_slug'])
 
@@ -132,24 +135,20 @@ class CategoryListView(PostQuerySetMixin, ListView):
 class ProfileListView(PostQuerySetMixin, ListView):
     """Отобразить страницу пользователя с опубликованными записями."""
 
-    user_object = None
     template_name = 'blog/profile.html'
-    paginate_by = 10
-
-    def dispatch(self, request, *args, **kwargs):
-        self.user_object = get_object_or_404(
-            User,
-            username=self.kwargs['username']
-        )
-        return super().dispatch(request, *args, **kwargs)
+    paginate_by = settings.MAIN_PAGIN
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['profile'] = self.user_object
+        context['profile'] = User.objects.get(username=self.kwargs['username'])
         return context
 
     def get_queryset(self):
-        if self.user_object != self.request.user:
+        user_object = get_object_or_404(
+            User,
+            username=self.kwargs['username']
+        )
+        if user_object != self.request.user:
             return super().pub_queryset.filter(
                 author__username=self.kwargs['username'])
         return super().queryset.filter(
