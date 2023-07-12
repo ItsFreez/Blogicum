@@ -59,7 +59,7 @@ class PostQuerySetMixin:
         'author',
         'category',
         'location'
-    )
+    ).order_by('-pub_date')
     pub_queryset = queryset.filter(
         is_published=True,
         category__is_published=True,
@@ -67,23 +67,14 @@ class PostQuerySetMixin:
     )
 
 
-class IndexListView(ListView):
+class IndexListView(PostQuerySetMixin, ListView):
     """Вывести на главную страницу список постов."""
 
     template_name = 'blog/index.html'
-    queryset = Post.objects.annotate(
-        comment_count=Count('comments')
-    ).select_related(
-        'author',
-        'category',
-        'location'
-    ).filter(
-        is_published=True,
-        category__is_published=True,
-        pub_date__lte=timezone.now()
-    )
     paginate_by = 10
-    ordering = ('-pub_date',)
+
+    def get_queryset(self):
+        return super().pub_queryset
 
 
 class PostDetailView(PostQuerySetMixin, DetailView):
@@ -134,8 +125,7 @@ class CategoryListView(PostQuerySetMixin, ListView):
 
     def get_queryset(self):
         return self.pub_queryset.filter(
-            category__slug=self.kwargs['category_slug']
-        ).order_by('-pub_date')
+            category__slug=self.kwargs['category_slug'])
 
 
 class ProfileListView(PostQuerySetMixin, ListView):
@@ -160,11 +150,9 @@ class ProfileListView(PostQuerySetMixin, ListView):
     def get_queryset(self):
         if self.user_object != self.request.user:
             return super().pub_queryset.filter(
-                author__username=self.kwargs['username']
-                ).order_by('-pub_date')
+                author__username=self.kwargs['username'])
         return super().queryset.filter(
-            author__username=self.kwargs['username']
-            ).order_by('-pub_date')
+            author__username=self.kwargs['username'])
 
 
 class ProfileUpdateView(LoginRequiredMixin, UpdateView):
