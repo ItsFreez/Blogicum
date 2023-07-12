@@ -1,4 +1,5 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db.models import Count
 from django.shortcuts import get_object_or_404, redirect
 from django.views.generic import (
     CreateView, DeleteView, DetailView, ListView, UpdateView
@@ -52,7 +53,9 @@ class PostQuerySetMixin:
     """
 
     model = Post
-    queryset = Post.objects.select_related(
+    queryset = Post.objects.annotate(
+        comment_count=Count('comments')
+    ).select_related(
         'author',
         'category',
         'location'
@@ -68,7 +71,9 @@ class IndexListView(ListView):
     """Вывести на главную страницу список постов."""
 
     template_name = 'blog/index.html'
-    queryset = Post.objects.select_related(
+    queryset = Post.objects.annotate(
+        comment_count=Count('comments')
+    ).select_related(
         'author',
         'category',
         'location'
@@ -78,6 +83,7 @@ class IndexListView(ListView):
         pub_date__lte=timezone.now()
     )
     paginate_by = 10
+    ordering = ('-pub_date',)
 
 
 class PostDetailView(PostQuerySetMixin, DetailView):
@@ -129,7 +135,7 @@ class CategoryListView(PostQuerySetMixin, ListView):
     def get_queryset(self):
         return self.pub_queryset.filter(
             category__slug=self.kwargs['category_slug']
-        )
+        ).order_by('-pub_date')
 
 
 class ProfileListView(PostQuerySetMixin, ListView):
@@ -154,9 +160,11 @@ class ProfileListView(PostQuerySetMixin, ListView):
     def get_queryset(self):
         if self.user_object != self.request.user:
             return super().pub_queryset.filter(
-                author__username=self.kwargs['username'])
+                author__username=self.kwargs['username']
+                ).order_by('-pub_date')
         return super().queryset.filter(
-            author__username=self.kwargs['username'])
+            author__username=self.kwargs['username']
+            ).order_by('-pub_date')
 
 
 class ProfileUpdateView(LoginRequiredMixin, UpdateView):
