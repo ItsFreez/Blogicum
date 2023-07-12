@@ -47,11 +47,11 @@ class Location(PublishedModel):
 class Post(PublishedModel):
     title = models.CharField(
         max_length=MAXL_OF_TITLE,
-        help_text=('Не более 256 символов.'),
+        help_text='Не более 256 символов.',
         verbose_name='Заголовок'
     )
     text = models.TextField(
-        help_text=('Описание события.'),
+        help_text='Описание события.',
         verbose_name='Текст'
     )
     pub_date = models.DateTimeField(
@@ -77,14 +77,14 @@ class Post(PublishedModel):
         Category,
         on_delete=models.SET_NULL,
         null=True,
-        help_text=('Выберете категорию, к которой принадлежит событие.'),
+        help_text='Выберете категорию, к которой принадлежит событие.',
         verbose_name='Категория'
     )
     image = models.ImageField(
         'Фото',
         upload_to='posts_images',
         blank=True,
-        help_text=('Загрузите подходящую фотографию - необязательное поле.')
+        help_text='Загрузите подходящую фотографию - необязательное поле.'
     )
 
     class Meta:

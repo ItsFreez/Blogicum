@@ -72,7 +72,7 @@ class IndexListView(PostQuerySetMixin, ListView):
     """Вывести на главную страницу список постов."""
 
     template_name = 'blog/index.html'
-    paginate_by = settings.MAIN_PAGIN
+    paginate_by = settings.PAGE_SIZE
 
     def get_queryset(self):
         return super().pub_queryset
@@ -80,6 +80,7 @@ class IndexListView(PostQuerySetMixin, ListView):
 
 class PostDetailView(PostQuerySetMixin, DetailView):
     """Отобразить полное описание выбранного поста."""
+
     pk_url_kwarg = 'post_id'
     template_name = 'blog/detail.html'
 
@@ -108,18 +109,12 @@ class PostDetailView(PostQuerySetMixin, DetailView):
 class CategoryListView(PostQuerySetMixin, ListView):
     """Отобразить все опубликованные посты выбранной категории."""
 
+    category_obj = None
     template_name = 'blog/category.html'
-    paginate_by = settings.MAIN_PAGIN
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['category'] = Category.objects.get(
-            slug=self.kwargs['category_slug']
-        )
-        return context
+    paginate_by = settings.PAGE_SIZE
 
     def get_queryset(self):
-        get_object_or_404(
+        self.category_obj = get_object_or_404(
             Category,
             slug=self.kwargs['category_slug'],
             is_published=True
@@ -127,28 +122,34 @@ class CategoryListView(PostQuerySetMixin, ListView):
         return self.pub_queryset.filter(
             category__slug=self.kwargs['category_slug'])
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['category'] = self.category_obj
+        return context
+
 
 class ProfileListView(PostQuerySetMixin, ListView):
     """Отобразить страницу пользователя с опубликованными записями."""
 
+    user_object = None
     template_name = 'blog/profile.html'
-    paginate_by = settings.MAIN_PAGIN
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['profile'] = User.objects.get(username=self.kwargs['username'])
-        return context
+    paginate_by = settings.PAGE_SIZE
 
     def get_queryset(self):
-        user_object = get_object_or_404(
+        self.user_object = get_object_or_404(
             User,
             username=self.kwargs['username']
         )
-        if user_object != self.request.user:
+        if self.user_object != self.request.user:
             return super().pub_queryset.filter(
                 author__username=self.kwargs['username'])
         return super().queryset.filter(
             author__username=self.kwargs['username'])
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['profile'] = self.user_object
+        return context
 
 
 class ProfileUpdateView(LoginRequiredMixin, UpdateView):
@@ -159,10 +160,7 @@ class ProfileUpdateView(LoginRequiredMixin, UpdateView):
     template_name = 'blog/user.html'
 
     def get_object(self):
-        object_get = get_object_or_404(
-            User,
-            username=self.request.user
-        )
+        object_get = User.objects.get(username=self.request.user)
         return object_get
 
     def get_success_url(self):

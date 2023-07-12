@@ -90,7 +90,7 @@ LOGIN_URL = 'login'
 
 LOGIN_REDIRECT_URL = 'blog:index'
 
-MAIN_PAGIN = 10
+PAGE_SIZE = 10
 
 MEDIA_ROOT = BASE_DIR / 'media'
 
