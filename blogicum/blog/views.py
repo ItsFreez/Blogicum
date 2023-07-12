@@ -21,16 +21,16 @@ class CommentChangeMixin:
     def dispatch(self, request, *args, **kwargs):
         comment_object = get_object_or_404(
             Comment,
-            pk=kwargs['pk'],
-            post_id=kwargs['id'],
+            pk=kwargs['comment_id'],
+            post_id=kwargs['post_id'],
         )
         if comment_object.author != request.user:
-            return redirect('blog:post_detail', self.kwargs['id'])
+            return redirect('blog:post_detail', kwargs['post_id'])
         return super().dispatch(request, *args, **kwargs)
 
     def get_success_url(self):
         return reverse('blog:post_detail',
-                       kwargs={'pk': self.kwargs['id']})
+                       kwargs={'post_id': self.kwargs['post_id']})
 
 
 class PostChangeMixin:
@@ -40,9 +40,9 @@ class PostChangeMixin:
     template_name = 'blog/create.html'
 
     def dispatch(self, request, *args, **kwargs):
-        post_object = get_object_or_404(Post, pk=kwargs['pk'])
+        post_object = get_object_or_404(Post, pk=kwargs['post_id'])
         if post_object.author != request.user:
-            return redirect('blog:post_detail', self.kwargs['pk'])
+            return redirect('blog:post_detail', kwargs['post_id'])
         return super().dispatch(request, *args, **kwargs)
 
 
@@ -79,20 +79,20 @@ class IndexListView(PostQuerySetMixin, ListView):
 
 class PostDetailView(PostQuerySetMixin, DetailView):
     """Отобразить полное описание выбранного поста."""
-
+    pk_url_kwarg = 'post_id'
     template_name = 'blog/detail.html'
 
     def get_queryset(self):
         post_object = get_object_or_404(
             Post,
-            pk=self.kwargs['pk']
+            pk=self.kwargs['post_id']
         )
         if post_object.author != self.request.user:
             return super().pub_queryset.filter(
-                pk=self.kwargs['pk'],
+                pk=self.kwargs['post_id'],
             )
         return super().queryset.filter(
-            pk=self.kwargs['pk']
+            pk=self.kwargs['post_id']
         )
 
     def get_context_data(self, **kwargs):
@@ -175,9 +175,10 @@ class CommentCreateView(LoginRequiredMixin, CreateView):
     post_object = None
     model = Comment
     form_class = CommentForm
+    pk_url_kwarg = 'post_id'
 
     def dispatch(self, request, *args, **kwargs):
-        self.post_object = get_object_or_404(Post, pk=kwargs['pk'])
+        self.post_object = get_object_or_404(Post, pk=kwargs['post_id'])
         return super().dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):
@@ -186,19 +187,21 @@ class CommentCreateView(LoginRequiredMixin, CreateView):
         return super().form_valid(form)
 
     def get_success_url(self):
-        return reverse('blog:post_detail', kwargs={'pk': self.post_object.pk})
+        return reverse('blog:post_detail',
+                       kwargs={'post_id': self.kwargs['post_id']})
 
 
 class CommentUpdateView(CommentChangeMixin, LoginRequiredMixin, UpdateView):
     """Отобразить форму для изменения комментария."""
 
     form_class = CommentForm
+    pk_url_kwarg = 'post_id'
 
 
 class CommentDeleteView(CommentChangeMixin, LoginRequiredMixin, DeleteView):
     """Отобразить страницу удаления комментария."""
 
-    pass
+    pk_url_kwarg = 'post_id'
 
 
 class PostCreateView(LoginRequiredMixin, CreateView):
@@ -220,13 +223,17 @@ class PostUpdateView(PostChangeMixin, LoginRequiredMixin, UpdateView):
     """Отобразить форму для изменения поста."""
 
     form_class = PostForm
+    pk_url_kwarg = 'post_id'
 
     def get_success_url(self):
-        return reverse('blog:post_detail', kwargs={'pk': self.kwargs['pk']})
+        return reverse('blog:post_detail',
+                       kwargs={'post_id': self.kwargs['post_id']})
 
 
 class PostDeleteView(PostChangeMixin, LoginRequiredMixin, DeleteView):
     """Отобразить страницу удаления поста."""
+
+    pk_url_kwarg = 'post_id'
 
     def get_success_url(self):
         return reverse('blog:profile', kwargs={'username': self.request.user})
