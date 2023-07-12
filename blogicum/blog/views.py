@@ -156,24 +156,22 @@ class ProfileListView(PostQuerySetMixin, ListView):
             author__username=self.kwargs['username'])
 
 
-class ProfileUpdateView(UpdateView):
+class ProfileUpdateView(LoginRequiredMixin, UpdateView):
     """Отобразить форму для изменения данных пользователя."""
-    user_object = None
     model = User
     form_class = MyUserForm
     template_name = 'blog/user.html'
 
-    def dispatch(self, request, *args, **kwargs):
-        self.user_object = get_object_or_404(
+    def get_object(self):
+        object_get = get_object_or_404(
             User,
-            pk=kwargs['pk'],
-            username=request.user
+            username=self.request.user
         )
-        return super().dispatch(request, *args, **kwargs)
+        return object_get
 
     def get_success_url(self):
         return reverse('blog:profile',
-                       kwargs={'username': self.user_object.username})
+                       kwargs={'username': self.request.user})
 
 
 class CommentCreateView(LoginRequiredMixin, CreateView):
