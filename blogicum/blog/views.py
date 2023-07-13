@@ -160,8 +160,7 @@ class ProfileUpdateView(LoginRequiredMixin, UpdateView):
     template_name = 'blog/user.html'
 
     def get_object(self):
-        object_get = User.objects.get(username=self.request.user)
-        return object_get
+        return self.request.user
 
     def get_success_url(self):
         return reverse('blog:profile',
@@ -190,13 +189,13 @@ class CommentCreateView(LoginRequiredMixin, CreateView):
                        kwargs={'post_id': self.kwargs['post_id']})
 
 
-class CommentUpdateView(CommentChangeMixin, LoginRequiredMixin, UpdateView):
+class CommentUpdateView(LoginRequiredMixin, CommentChangeMixin, UpdateView):
     """Отобразить форму для изменения комментария."""
 
     form_class = CommentForm
 
 
-class CommentDeleteView(CommentChangeMixin, LoginRequiredMixin, DeleteView):
+class CommentDeleteView(LoginRequiredMixin, CommentChangeMixin, DeleteView):
     """Отобразить страницу удаления комментария."""
 
     pass
@@ -217,7 +216,7 @@ class PostCreateView(LoginRequiredMixin, CreateView):
         return reverse('blog:profile', kwargs={'username': self.request.user})
 
 
-class PostUpdateView(PostChangeMixin, LoginRequiredMixin, UpdateView):
+class PostUpdateView(LoginRequiredMixin, PostChangeMixin, UpdateView):
     """Отобразить форму для изменения поста."""
 
     form_class = PostForm
@@ -227,7 +226,7 @@ class PostUpdateView(PostChangeMixin, LoginRequiredMixin, UpdateView):
                        kwargs={'post_id': self.kwargs['post_id']})
 
 
-class PostDeleteView(PostChangeMixin, LoginRequiredMixin, DeleteView):
+class PostDeleteView(LoginRequiredMixin, PostChangeMixin, DeleteView):
     """Отобразить страницу удаления поста."""
 
     def get_success_url(self):
