@@ -13,7 +13,7 @@ from .models import Category, Comment, Post, User
 
 
 class CommentChangeMixin:
-    """Отобразить данные для изменения комментария, соответствующего поста."""
+    """Отображает данные для изменения комментария, соответствующего поста."""
 
     model = Comment
     pk_url_kwarg = 'comment_id'
@@ -34,7 +34,7 @@ class CommentChangeMixin:
 
 
 class PostChangeMixin:
-    """Отобразить данные для изменения поста."""
+    """Отображает данные для изменения поста."""
 
     model = Post
     pk_url_kwarg = 'post_id'
@@ -49,8 +49,8 @@ class PostChangeMixin:
 
 class PostQuerySetMixin:
     """
-    1. Создать базовый QuerySet объекта Post со всеми связанными моделями.
-    2. Создать публичный QuerySet для отображения всем посетителям.
+    1. Создает базовый QuerySet объекта Post со всеми связанными моделями.
+    2. Создает публичный QuerySet для отображения всем пользователям.
     """
 
     model = Post
@@ -69,7 +69,7 @@ class PostQuerySetMixin:
 
 
 class IndexListView(PostQuerySetMixin, ListView):
-    """Вывести на главную страницу список постов."""
+    """Выводит на главную страницу список постов."""
 
     template_name = 'blog/index.html'
     paginate_by = settings.PAGE_SIZE
@@ -79,7 +79,7 @@ class IndexListView(PostQuerySetMixin, ListView):
 
 
 class PostDetailView(PostQuerySetMixin, DetailView):
-    """Отобразить полное описание выбранного поста."""
+    """Отображает полное описание выбранного поста."""
 
     pk_url_kwarg = 'post_id'
     template_name = 'blog/detail.html'
@@ -107,7 +107,7 @@ class PostDetailView(PostQuerySetMixin, DetailView):
 
 
 class CategoryListView(PostQuerySetMixin, ListView):
-    """Отобразить все опубликованные посты выбранной категории."""
+    """Отображает все опубликованные посты выбранной категории."""
 
     category_obj = None
     template_name = 'blog/category.html'
@@ -129,7 +129,7 @@ class CategoryListView(PostQuerySetMixin, ListView):
 
 
 class ProfileListView(PostQuerySetMixin, ListView):
-    """Отобразить страницу пользователя с опубликованными записями."""
+    """Отображает страницу пользователя с опубликованными записями."""
 
     user_object = None
     template_name = 'blog/profile.html'
@@ -153,7 +153,7 @@ class ProfileListView(PostQuerySetMixin, ListView):
 
 
 class ProfileUpdateView(LoginRequiredMixin, UpdateView):
-    """Отобразить форму для изменения данных пользователя."""
+    """Отображает форму для изменения данных пользователя."""
 
     model = User
     form_class = MyUserForm
@@ -168,7 +168,7 @@ class ProfileUpdateView(LoginRequiredMixin, UpdateView):
 
 
 class CommentCreateView(LoginRequiredMixin, CreateView):
-    """Отобразить форму для создания комментария."""
+    """Отображает форму для создания комментария."""
 
     post_object = None
     model = Comment
@@ -190,19 +190,19 @@ class CommentCreateView(LoginRequiredMixin, CreateView):
 
 
 class CommentUpdateView(LoginRequiredMixin, CommentChangeMixin, UpdateView):
-    """Отобразить форму для изменения комментария."""
+    """Отображает форму для изменения комментария."""
 
     form_class = CommentForm
 
 
 class CommentDeleteView(LoginRequiredMixin, CommentChangeMixin, DeleteView):
-    """Отобразить страницу удаления комментария."""
+    """Отображает страницу удаления комментария."""
 
     pass
 
 
 class PostCreateView(LoginRequiredMixin, CreateView):
-    """Отобразить форму создания поста."""
+    """Отображает форму создания поста."""
 
     model = Post
     form_class = PostForm
@@ -217,7 +217,7 @@ class PostCreateView(LoginRequiredMixin, CreateView):
 
 
 class PostUpdateView(LoginRequiredMixin, PostChangeMixin, UpdateView):
-    """Отобразить форму для изменения поста."""
+    """Отображает форму для изменения поста."""
 
     form_class = PostForm
 
@@ -227,7 +227,7 @@ class PostUpdateView(LoginRequiredMixin, PostChangeMixin, UpdateView):
 
 
 class PostDeleteView(LoginRequiredMixin, PostChangeMixin, DeleteView):
-    """Отобразить страницу удаления поста."""
+    """Отображает страницу удаления поста."""
 
     def get_success_url(self):
         return reverse('blog:profile', kwargs={'username': self.request.user})

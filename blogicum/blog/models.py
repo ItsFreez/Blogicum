@@ -10,6 +10,8 @@ MAXL_OF_TITLE = 256
 
 
 class Category(PublishedModel):
+    """Модель для категорий."""
+
     title = models.CharField(
         max_length=MAXL_OF_TITLE,
         verbose_name='Заголовок'
@@ -31,6 +33,8 @@ class Category(PublishedModel):
 
 
 class Location(PublishedModel):
+    """Модель для локаций."""
+
     name = models.CharField(
         max_length=MAXL_OF_TITLE,
         verbose_name='Название места'
@@ -45,6 +49,8 @@ class Location(PublishedModel):
 
 
 class Post(PublishedModel):
+    """Модель для публкаций."""
+
     title = models.CharField(
         max_length=MAXL_OF_TITLE,
         help_text='Не более 256 символов.',
@@ -98,6 +104,8 @@ class Post(PublishedModel):
 
 
 class Comment(models.Model):
+    """Модель для комментариев."""
+
     text = models.TextField('Текст комментария')
     post = models.ForeignKey(
         Post,

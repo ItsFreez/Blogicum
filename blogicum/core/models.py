@@ -4,7 +4,7 @@ from django.db import models
 class PublishedModel(models.Model):
     """
     Абстрактная модель.
-    Добавить флаг is_published и дату создания объекта created_at.
+    Добавляет флаг is_published и дату создания объекта created_at.
     """
     is_published = models.BooleanField(
         default=True,

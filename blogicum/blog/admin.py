@@ -7,6 +7,8 @@ admin.site.empty_value_display = 'Не задано'
 
 
 class CategoryAdmin(admin.ModelAdmin):
+    """Кастомный интерфейс админ-зоны для категорий."""
+
     list_display = (
         'title',
         'description',
@@ -20,6 +22,8 @@ class CategoryAdmin(admin.ModelAdmin):
 
 
 class LocationAdmin(admin.ModelAdmin):
+    """Кастомный интерфейс админ-зоны для локаций."""
+
     list_display = (
         'name',
         'is_published',
@@ -29,6 +33,8 @@ class LocationAdmin(admin.ModelAdmin):
 
 
 class PostAdmin(admin.ModelAdmin):
+    """Кастомный интерфейс админ-зоны для публикаций."""
+
     list_display = (
         'title',
         'pub_date',
